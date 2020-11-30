@@ -12,7 +12,6 @@ function date_string_processor($date, $timezone='Europe/London')
         }
     } catch (Exception $e) {
         echo 'Message: ' .$e->getMessage();
-
         exit();
     } finally {
         return $date;
@@ -22,14 +21,12 @@ function date_string_processor($date, $timezone='Europe/London')
 function days_between_dates($start_date, $end_date) {
     $start_date = date_string_processor($start_date);
     $end_date = date_string_processor($end_date);
-    $total_days = date_diff($end_date, $start_date)->days;
-    return $total_days;
+    return date_diff($end_date, $start_date)->days;
 }
 
 function weeks_between_dates($start_date, $end_date) {
     $total_days= days_between_dates($start_date, $end_date);
-    $total_weeks = floor($total_days / 7);
-    return $total_weeks;
+    return floor($total_days / 7);
 }
 
 function weekdays_between_dates($start_date, $end_date) {
@@ -38,7 +35,16 @@ function weekdays_between_dates($start_date, $end_date) {
     $total_days = days_between_dates($start_date, $end_date);
     $remaining_weekdays = $total_days % 7;
     $weekday_mask = array(0,1,2,3,4); // make weekday mask, 5 & 6 represent saturday and sunday
-    $extra_weekdays = array_pad(array_fill(0,$remaining_weekdays,1),7,0);
+    $day_counts = array_pad(array_fill(0,$remaining_weekdays,1),7,0);
+    $day_counts = rotate_array($day_counts, $start_weekday-1);
+    foreach ($day_counts as &$weekday) {
+        $weekday = $weekday + $total_weeks;
+    }
+    $total_weekdays = 0;
+    foreach ($weekday_mask as $weekday) {
+        $total_weekdays += $day_counts[$weekday];
+    }
+    return $total_weekdays;
 }
 
 function rotate_array($array, $amount) {
@@ -49,8 +55,7 @@ function rotate_array($array, $amount) {
 }
 
 function create_weekday_array($number) {
-    $array = array_pad(array_fill(0,$number,1),7,0);
-    return $array;
+    return array_pad(array_fill(0,$number,1),7,0);
 }
 
 $start_date = $_GET['start_date'];
@@ -64,9 +69,5 @@ echo '</br>';
 echo weeks_between_dates($start_date, $end_date);
 echo '</br>';
 echo weekdays_between_dates($start_date, $end_date);
-
-$test_array = create_weekday_array(3);
-print_r($test_array);
 echo '</br>';
-$test_array = rotate_array($test_array,1);
-print_r($test_array);
+
